@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Attendance Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4A90E2">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto p-4 max-w-lg">
+        <header class="text-center my-8">
+            <h1 class="text-3xl font-bold text-gray-800">Church Attendance Tracker</h1>
+            <p class="text-gray-600">Log attendance and view reports.</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="flex border-b mb-6 justify-center">
+            <div id="tab_daily" class="tab active">Weekly Entry</div>
+            <div id="tab_monthly" class="tab">Monthly Report</div>
+            <div id="tab_yearly" class="tab">Yearly Report</div>
+        </div>
+
+        <main>
+            <!-- Weekly Entry Page -->
+            <div id="page_daily" class="page active">
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4">Enter Sunday Attendance</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="morning_attendance" class="block text-sm font-medium text-gray-700">Morning Service Attendance</label>
+                            <input type="number" id="morning_attendance" class="input-field" placeholder="e.g., 150">
+                        </div>
+                        <div>
+                            <label for="afternoon_attendance" class="block text-sm font-medium text-gray-700">Afternoon Service Attendance</label>
+                            <input type="number" id="afternoon_attendance" class="input-field" placeholder="e.g., 120">
+                        </div>
+                         <div>
+                            <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="date" id="attendance_date" class="input-field">
+                        </div>
+                        <button id="save_attendance" class="btn w-full">Save Attendance</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4">Overall Summary</h2>
+                    <div id="report_container" class="space-y-4">
+                        <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Report Page -->
+            <div id="page_monthly" class="page">
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4">Monthly Attendance Report</h2>
+                    <div id="monthly_report_container" class="space-y-4">
+                         <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yearly Report Page -->
+            <div id="page_yearly" class="page">
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4">Yearly Attendance Summary</h2>
+                    <div id="yearly_report_container" class="space-y-4">
+                         <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit_modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-semibold mb-4">Edit Attendance Record</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="edit_morning_attendance" class="block text-sm font-medium text-gray-700">Morning Service</label>
+                    <input type="number" id="edit_morning_attendance" class="input-field">
+                </div>
+                <div>
+                    <label for="edit_afternoon_attendance" class="block text-sm font-medium text-gray-700">Afternoon Service</label>
+                    <input type="number" id="edit_afternoon_attendance" class="input-field">
+                </div>
+                <div>
+                    <label for="edit_attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" id="edit_attendance_date" class="input-field">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-between items-center">
+                <button id="delete_record_btn" class="btn btn-danger">Delete</button>
+                <div class="space-x-2">
+                    <button id="cancel_edit_btn" class="btn btn-secondary">Cancel</button>
+                    <button id="save_changes_btn" class="btn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
