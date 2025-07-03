@@ -18,6 +18,8 @@ import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serv
     measurementId: "G-WNQVJ14B0F"
   };
 
+const appId = firebaseConfig.appId;
+
 // --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
