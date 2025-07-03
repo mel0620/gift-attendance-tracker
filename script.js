@@ -3,8 +3,20 @@ import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged }
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, query, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- Firebase Configuration ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "your-api-key", authDomain: "your-auth-domain", projectId: "your-project-id" };
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-church-attendance';
+// const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "your-api-key", authDomain: "your-auth-domain", projectId: "your-project-id" };
+// const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-church-attendance';
+
+// Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyC33cP0PgxrlMBVm1xfnF_wpYTkfl3_iCQ",
+    authDomain: "gift-attendance-tracker.firebaseapp.com",
+    projectId: "gift-attendance-tracker",
+    storageBucket: "gift-attendance-tracker.firebasestorage.app",
+    messagingSenderId: "40292587335",
+    appId: "1:40292587335:web:6788dab5131b3c58b91e62",
+    measurementId: "G-WNQVJ14B0F"
+  };
 
 // --- Initialize Firebase ---
 const app = initializeApp(firebaseConfig);
