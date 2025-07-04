@@ -6,24 +6,6 @@
     <title>Church Attendance Tracker</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A90E2">
-    <!-- Favicon for most browsers -->
-    <link rel="icon" type="image/png" sizes="16x16" href="img/favicons/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="img/favicons/favicon-96x96.png">
-    <link rel="icon" type="image/x-icon" href="img/favicons/favicon.ico">
-    <link rel="icon" type="image/svg+xml" href="img/favicons/favicon.svg">
-
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="img/favicons/apple-touch-icon.png">
-
-    <!-- Android Chrome Icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="img/favicons/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="img/favicons/android-chrome-512x512.png">
-
-    <!-- Web App Manifest Icons (optional, fallback) -->
-    <link rel="icon" type="image/png" sizes="192x192" href="img/favicons/web-app-manifest-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="img/favicons/web-app-manifest-512x512.png">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -51,12 +33,11 @@
 
     <!-- Main App View (hidden by default) -->
     <div id="app_view" style="display: none;">
-        <div class="container mx-auto p-4 max-w-lg">
+        <div class="container mx-auto p-4 max-w-2xl">
             <header class="text-center my-8">
                 <div class="flex justify-between items-center">
-                    <div class="w-1/3"></div>
-                    <h1 class="text-3xl font-bold text-gray-800 w-1/3">Tracker</h1>
-                    <div class="w-1/3 text-right">
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 w-1/3 whitespace-nowrap">Attendance Tracker</h1>
+                    <div class="text-right">
                         <button id="logout_btn" class="text-sm text-blue-600 hover:underline">Logout</button>
                     </div>
                 </div>
@@ -74,23 +55,41 @@
                     <!-- Weekly Entry Page -->
                     <div id="page_daily" class="page active">
                         <div class="card">
-                            <h2 class="text-xl font-semibold mb-4">Enter Attendance</h2>
-                            <div class="space-y-4">
-                                <div>
-                                    <label for="morning_attendance" class="block text-sm font-medium text-gray-700">Morning Service Attendance</label>
-                                    <input type="number" id="morning_attendance" class="input-field" placeholder="e.g., 150">
+                            <h2 class="text-xl font-semibold mb-4 text-center">Enter Sunday Attendance</h2>
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                    <!-- Morning Service -->
+                                    <fieldset class="border-t-2 border-blue-200 pt-4">
+                                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Morning Service</legend>
+                                        <div class="space-y-4 mt-2">
+                                            <div><label for="morning_adults" class="label">Adults</label><input type="number" id="morning_adults" class="input-field" value="0"></div>
+                                            <div><label for="morning_youth" class="label">Youth</label><input type="number" id="morning_youth" class="input-field" value="0"></div>
+                                            <div><label for="morning_kids" class="label">Kids</label><input type="number" id="morning_kids" class="input-field" value="0"></div>
+                                            <div><label for="morning_visitors" class="label">Visitors</label><input type="number" id="morning_visitors" class="input-field" value="0"></div>
+                                        </div>
+                                    </fieldset>
+
+                                    <!-- Afternoon Service -->
+                                    <fieldset class="border-t-2 border-green-200 pt-4">
+                                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Afternoon Service</legend>
+                                        <div class="space-y-4 mt-2">
+                                            <div><label for="afternoon_adults" class="label">Adults</label><input type="number" id="afternoon_adults" class="input-field" value="0"></div>
+                                            <div><label for="afternoon_youth" class="label">Youth</label><input type="number" id="afternoon_youth" class="input-field" value="0"></div>
+                                            <div><label for="afternoon_kids" class="label">Kids</label><input type="number" id="afternoon_kids" class="input-field" value="0"></div>
+                                            <div><label for="afternoon_visitors" class="label">Visitors</label><input type="number" id="afternoon_visitors" class="input-field" value="0"></div>
+                                        </div>
+                                    </fieldset>
                                 </div>
-                                <div>
-                                    <label for="afternoon_attendance" class="block text-sm font-medium text-gray-700">Afternoon Service Attendance</label>
-                                    <input type="number" id="afternoon_attendance" class="input-field" placeholder="e.g., 120">
-                                </div>
-                                <div>
-                                    <label for="both_attendance" class="block text-sm font-medium text-gray-700">Number who attended both services</label>
-                                    <input type="number" id="both_attendance" class="input-field" placeholder="e.g., 20" value="0">
-                                </div>
-                                 <div>
-                                    <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
-                                    <input type="date" id="attendance_date" class="input-field">
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-4">
+                                     <div>
+                                        <label for="both_total" class="block text-sm font-medium text-gray-700">Total Who Attended Both Services</label>
+                                        <input type="number" id="both_total" class="input-field" value="0">
+                                    </div>
+                                     <div>
+                                        <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
+                                        <input type="date" id="attendance_date" class="input-field">
+                                    </div>
                                 </div>
                                 <button id="save_attendance" class="btn w-full">Save Attendance</button>
                             </div>
@@ -129,7 +128,7 @@
                 <div class="card">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-semibold">All Attendance Records</h2>
-                        <a href="#" id="back_link" class="text-sm text-blue-600 hover:underline">← Back</a>
+                        <a href="#" id="back_link" class="text-sm text-blue-600 hover:underline">← Back to Main</a>
                     </div>
                     <div id="all_records_container" class="space-y-2"></div>
                 </div>
@@ -143,22 +142,34 @@
     <div id="edit_modal" class="modal-overlay">
         <div class="modal-content">
             <h2 class="text-xl font-semibold mb-4">Edit Attendance Record</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="edit_morning_attendance" class="block text-sm font-medium text-gray-700">Morning Service</label>
-                    <input type="number" id="edit_morning_attendance" class="input-field">
-                </div>
-                <div>
-                    <label for="edit_afternoon_attendance" class="block text-sm font-medium text-gray-700">Afternoon Service</label>
-                    <input type="number" id="edit_afternoon_attendance" class="input-field">
-                </div>
-                <div>
-                    <label for="edit_both_attendance" class="block text-sm font-medium text-gray-700">Number who attended both</label>
-                    <input type="number" id="edit_both_attendance" class="input-field">
-                </div>
-                <div>
-                    <label for="edit_attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
-                    <input type="date" id="edit_attendance_date" class="input-field">
+            <div class="modal-body">
+                <div class="space-y-6">
+                     <fieldset class="border-t-2 border-blue-200 pt-4">
+                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Morning</legend>
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <div><label for="edit_morning_adults" class="label">Adults</label><input type="number" id="edit_morning_adults" class="input-field"></div>
+                            <div><label for="edit_morning_youth" class="label">Youth</label><input type="number" id="edit_morning_youth" class="input-field"></div>
+                            <div><label for="edit_morning_kids" class="label">Kids</label><input type="number" id="edit_morning_kids" class="input-field"></div>
+                            <div><label for="edit_morning_visitors" class="label">Visitors</label><input type="number" id="edit_morning_visitors" class="input-field"></div>
+                        </div>
+                    </fieldset>
+                     <fieldset class="border-t-2 border-green-200 pt-4">
+                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Afternoon</legend>
+                        <div class="grid grid-cols-2 gap-4 mt-2">
+                            <div><label for="edit_afternoon_adults" class="label">Adults</label><input type="number" id="edit_afternoon_adults" class="input-field"></div>
+                            <div><label for="edit_afternoon_youth" class="label">Youth</label><input type="number" id="edit_afternoon_youth" class="input-field"></div>
+                            <div><label for="edit_afternoon_kids" class="label">Kids</label><input type="number" id="edit_afternoon_kids" class="input-field"></div>
+                            <div><label for="edit_afternoon_visitors" class="label">Visitors</label><input type="number" id="edit_afternoon_visitors" class="input-field"></div>
+                        </div>
+                    </fieldset>
+                    <div>
+                        <label for="edit_both_total" class="block text-sm font-medium text-gray-700">Total Who Attended Both</label>
+                        <input type="number" id="edit_both_total" class="input-field">
+                    </div>
+                    <div>
+                        <label for="edit_attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
+                        <input type="date" id="edit_attendance_date" class="input-field">
+                    </div>
                 </div>
             </div>
             <div class="mt-6 flex flex-col sm:flex-row-reverse gap-2">
