@@ -1,10 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, query, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-// --- Firebase Configuration ---
-// const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "your-api-key", authDomain: "your-auth-domain", projectId: "your-project-id" };
-// const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-church-attendance';
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, onSnapshot, collection, addDoc, serverTimestamp, query, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Your web app's Firebase configuration
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -35,11 +31,7 @@ onAuthStateChanged(auth, async (user) => {
         userId = user.uid;
     } else {
         try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
+            await signInAnonymously(auth);
         } catch (error) {
             console.error("Authentication Error:", error);
         }
@@ -51,23 +43,37 @@ onAuthStateChanged(auth, async (user) => {
 // --- DOM Elements ---
 const morningAttendanceInput = document.getElementById('morning_attendance');
 const afternoonAttendanceInput = document.getElementById('afternoon_attendance');
+const bothAttendanceInput = document.getElementById('both_attendance');
 const attendanceDateInput = document.getElementById('attendance_date');
 const saveAttendanceButton = document.getElementById('save_attendance');
 const reportContainer = document.getElementById('report_container');
 const monthlyReportContainer = document.getElementById('monthly_report_container');
 const yearlyReportContainer = document.getElementById('yearly_report_container');
+const allRecordsContainer = document.getElementById('all_records_container');
+const overallSummaryContainer = document.getElementById('overall_summary_container');
 const toastContainer = document.getElementById('toast-container');
-const tabDaily = document.getElementById('tab_daily');
-const tabMonthly = document.getElementById('tab_monthly');
-const tabYearly = document.getElementById('tab_yearly');
+
+// Views and Pages
+const mainView = document.getElementById('main_view');
 const pageDaily = document.getElementById('page_daily');
 const pageMonthly = document.getElementById('page_monthly');
 const pageYearly = document.getElementById('page_yearly');
+const pageAll = document.getElementById('page_all');
+
+// Tabs
+const tabDaily = document.getElementById('tab_daily');
+const tabMonthly = document.getElementById('tab_monthly');
+const tabYearly = document.getElementById('tab_yearly');
+
+// Links for navigation
+const viewAllLink = document.getElementById('view_all_link');
+const backLink = document.getElementById('back_link');
 
 // --- Modal DOM Elements ---
 const editModal = document.getElementById('edit_modal');
 const editMorningInput = document.getElementById('edit_morning_attendance');
 const editAfternoonInput = document.getElementById('edit_afternoon_attendance');
+const editBothInput = document.getElementById('edit_both_attendance');
 const editDateInput = document.getElementById('edit_attendance_date');
 const saveChangesBtn = document.getElementById('save_changes_btn');
 const cancelEditBtn = document.getElementById('cancel_edit_btn');
@@ -81,7 +87,23 @@ saveAttendanceButton.addEventListener('click', saveAttendance);
 tabDaily.addEventListener('click', () => switchTab('daily'));
 tabMonthly.addEventListener('click', () => switchTab('monthly'));
 tabYearly.addEventListener('click', () => switchTab('yearly'));
-reportContainer.addEventListener('click', handleReportClick);
+
+viewAllLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    mainView.style.display = 'none';
+    pageAll.style.display = 'block';
+});
+
+backLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    pageAll.style.display = 'none';
+    mainView.style.display = 'block';
+});
+
+// Add event listeners to parent containers for edit buttons
+reportContainer.addEventListener('click', handleEditClick);
+allRecordsContainer.addEventListener('click', handleEditClick);
+
 cancelEditBtn.addEventListener('click', closeEditModal);
 saveChangesBtn.addEventListener('click', saveChanges);
 deleteRecordBtn.addEventListener('click', handleDeleteClick);
@@ -101,17 +123,23 @@ async function saveAttendance() {
         return;
     }
 
-    const morningCount = parseInt(morningAttendanceInput.value, 10);
-    const afternoonCount = parseInt(afternoonAttendanceInput.value, 10);
+    const morningCount = parseInt(morningAttendanceInput.value, 10) || 0;
+    const afternoonCount = parseInt(afternoonAttendanceInput.value, 10) || 0;
+    const bothCount = parseInt(bothAttendanceInput.value, 10) || 0;
     const attendanceDate = attendanceDateInput.value;
 
-    if (isNaN(morningCount) || isNaN(afternoonCount) || !attendanceDate) {
-        showToast("Please fill in all fields correctly.", "error");
+    if (!attendanceDate) {
+        showToast("Please select a date.", "error");
         return;
     }
     
-    if (morningCount < 0 || afternoonCount < 0) {
+    if (morningCount < 0 || afternoonCount < 0 || bothCount < 0) {
         showToast("Attendance cannot be negative.", "error");
+        return;
+    }
+
+    if (bothCount > morningCount || bothCount > afternoonCount) {
+        showToast("Attendees of both services cannot exceed morning or afternoon attendance.", "error");
         return;
     }
 
@@ -120,6 +148,7 @@ async function saveAttendance() {
         await addDoc(attendanceCollectionRef, {
             morning: morningCount,
             afternoon: afternoonCount,
+            both: bothCount,
             date: attendanceDate,
             createdAt: serverTimestamp()
         });
@@ -127,6 +156,7 @@ async function saveAttendance() {
         showToast("Attendance saved successfully!");
         morningAttendanceInput.value = '';
         afternoonAttendanceInput.value = '';
+        bothAttendanceInput.value = '0';
     } catch (error) {
         console.error("Error saving attendance: ", error);
         showToast("Error saving attendance. Please try again.", "error");
@@ -143,46 +173,49 @@ async function loadAttendanceReport() {
         const attendanceRecords = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Ensure records have a date field before processing
             if (data.date) {
                 attendanceRecords.push({ id: doc.id, ...data });
             }
         });
 
-        const sortedDaily = [...attendanceRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
-        generateOverallReport(sortedDaily);
-        generateMonthlyReport(attendanceRecords);
-        generateYearlyReport(attendanceRecords);
+        const sortedRecords = [...attendanceRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        generateOverallSummary(sortedRecords);
+        generateRecentRecords(sortedRecords);
+        generateMonthlyReport(sortedRecords);
+        generateYearlyReport(sortedRecords);
+        generateAllRecordsList(sortedRecords);
+
     }, (error) => {
         console.error("Error loading attendance report:", error);
-        [reportContainer, monthlyReportContainer, yearlyReportContainer].forEach(container => {
+        [reportContainer, monthlyReportContainer, yearlyReportContainer, allRecordsContainer].forEach(container => {
             container.innerHTML = `<p class="text-red-500">Error loading report.</p>`;
         });
     });
 }
 
-function generateOverallReport(records) {
+function generateOverallSummary(records) {
     if (records.length === 0) {
-        reportContainer.innerHTML = '<p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>';
+        overallSummaryContainer.innerHTML = '';
         return;
     }
-
     let totalMorning = 0;
     let totalAfternoon = 0;
-    let grandTotal = 0;
+    let totalUnique = 0;
 
     records.forEach(record => {
+        const both = record.both || 0;
         totalMorning += record.morning;
         totalAfternoon += record.afternoon;
-        grandTotal += record.morning + record.afternoon;
+        totalUnique += (record.morning + record.afternoon - both);
     });
 
     const averageMorning = (records.length > 0) ? Math.round(totalMorning / records.length) : 0;
     const averageAfternoon = (records.length > 0) ? Math.round(totalAfternoon / records.length) : 0;
-    const averageTotal = (records.length > 0) ? Math.round(grandTotal / records.length) : 0;
+    const averageTotal = (records.length > 0) ? Math.round(totalUnique / records.length) : 0;
 
-    let reportHTML = `
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center mb-6">
+    overallSummaryContainer.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
             <div class="bg-blue-100 p-3 rounded-lg">
                 <p class="text-sm text-blue-800">Avg. Morning</p>
                 <p class="text-2xl font-bold text-blue-900">${averageMorning}</p>
@@ -192,36 +225,44 @@ function generateOverallReport(records) {
                 <p class="text-2xl font-bold text-green-900">${averageAfternoon}</p>
             </div>
             <div class="bg-purple-100 p-3 rounded-lg">
-                <p class="text-sm text-purple-800">Avg. Total</p>
+                <p class="text-sm text-purple-800">Avg. Unique Total</p>
                 <p class="text-2xl font-bold text-purple-900">${averageTotal}</p>
             </div>
         </div>
-        <h3 class="text-lg font-semibold mb-2">Recent Records</h3>
-        <div class="space-y-2">
     `;
+}
 
-    records.slice(0, 10).forEach(record => {
+function generateRecentRecords(records) {
+    if (records.length === 0) {
+        reportContainer.innerHTML = '<p class="text-gray-600">No recent records.</p>';
+        return;
+    }
+
+    let reportHTML = '';
+    records.slice(0, 5).forEach(record => {
+        const both = record.both || 0;
+        const total = record.morning + record.afternoon - both;
         reportHTML += `
             <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
                 <div>
                     <span class="font-medium">${new Date(record.date + 'T00:00:00').toLocaleDateString()}</span>
                     <div class="text-sm text-gray-600">
-                        <span class="mr-4">M: <span class="font-semibold">${record.morning}</span></span>
-                        <span>A: <span class="font-semibold">${record.afternoon}</span></span>
+                        <span class="mr-4">M: ${record.morning}</span>
+                        <span class="mr-4">A: ${record.afternoon}</span>
+                        <span class="mr-4">B: ${both}</span>
+                        <span class="font-semibold">T: ${total}</span>
                     </div>
                 </div>
                 <button class="edit-btn text-sm text-blue-600 hover:text-blue-800 font-medium" data-id="${record.id}">Edit</button>
             </div>
         `;
     });
-
-    reportHTML += `</div>`;
     reportContainer.innerHTML = reportHTML;
 }
 
 function generateMonthlyReport(records) {
      if (records.length === 0) {
-        monthlyReportContainer.innerHTML = '<p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>';
+        monthlyReportContainer.innerHTML = '<p class="text-gray-600">No data yet.</p>';
         return;
     }
     const monthlyData = {};
@@ -230,10 +271,11 @@ function generateMonthlyReport(records) {
         const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
         
         if (!monthlyData[monthYear]) {
-            monthlyData[monthYear] = { morningTotal: 0, afternoonTotal: 0, count: 0, sortKey: date.getFullYear() * 100 + date.getMonth() };
+            monthlyData[monthYear] = { morningTotal: 0, afternoonTotal: 0, bothTotal: 0, count: 0, sortKey: date.getFullYear() * 100 + date.getMonth() };
         }
         monthlyData[monthYear].morningTotal += record.morning;
         monthlyData[monthYear].afternoonTotal += record.afternoon;
+        monthlyData[monthYear].bothTotal += (record.both || 0);
         monthlyData[monthYear].count++;
     });
 
@@ -243,7 +285,7 @@ function generateMonthlyReport(records) {
         const data = monthlyData[monthYear];
         const avgMorning = Math.round(data.morningTotal / data.count);
         const avgAfternoon = Math.round(data.afternoonTotal / data.count);
-        const avgTotal = Math.round((data.morningTotal + data.afternoonTotal) / data.count);
+        const avgTotal = Math.round((data.morningTotal + data.afternoonTotal - data.bothTotal) / data.count);
 
         reportHTML += `
             <div class="bg-gray-50 p-4 rounded-lg">
@@ -258,7 +300,7 @@ function generateMonthlyReport(records) {
                         <p class="font-semibold text-lg text-gray-900">${avgAfternoon}</p>
                     </div>
                     <div class="bg-purple-100 p-2 rounded">
-                        <p>Avg. Total</p>
+                        <p>Avg. Unique Total</p>
                         <p class="font-semibold text-lg text-gray-900">${avgTotal}</p>
                     </div>
                 </div>
@@ -272,7 +314,7 @@ function generateMonthlyReport(records) {
 
 function generateYearlyReport(records) {
     if (records.length === 0) {
-        yearlyReportContainer.innerHTML = '<p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>';
+        yearlyReportContainer.innerHTML = '<p class="text-gray-600">No data yet.</p>';
         return;
     }
 
@@ -280,10 +322,11 @@ function generateYearlyReport(records) {
     records.forEach(record => {
         const year = new Date(record.date + 'T00:00:00').getFullYear();
         if (!yearlyData[year]) {
-            yearlyData[year] = { morningTotal: 0, afternoonTotal: 0, count: 0 };
+            yearlyData[year] = { morningTotal: 0, afternoonTotal: 0, bothTotal: 0, count: 0 };
         }
         yearlyData[year].morningTotal += record.morning;
         yearlyData[year].afternoonTotal += record.afternoon;
+        yearlyData[year].bothTotal += (record.both || 0);
         yearlyData[year].count++;
     });
 
@@ -294,7 +337,7 @@ function generateYearlyReport(records) {
         const data = yearlyData[year];
         const avgMorning = Math.round(data.morningTotal / data.count);
         const avgAfternoon = Math.round(data.afternoonTotal / data.count);
-        const totalAverage = Math.round((data.morningTotal + data.afternoonTotal) / data.count);
+        const totalAverage = Math.round((data.morningTotal + data.afternoonTotal - data.bothTotal) / data.count);
 
         reportHTML += `
             <div class="bg-gray-50 p-4 rounded-lg">
@@ -309,7 +352,7 @@ function generateYearlyReport(records) {
                         <p class="text-2xl font-bold text-green-900">${avgAfternoon}</p>
                     </div>
                      <div class="bg-purple-100 p-3 rounded-lg">
-                        <p class="text-sm text-purple-800">Total Avg.</p>
+                        <p class="text-sm text-purple-800">Avg. Unique Total</p>
                         <p class="text-2xl font-bold text-purple-900">${totalAverage}</p>
                     </div>
                 </div>
@@ -317,15 +360,41 @@ function generateYearlyReport(records) {
             </div>
         `;
     });
-
     reportHTML += '</div>';
     yearlyReportContainer.innerHTML = reportHTML;
 }
 
+function generateAllRecordsList(records) {
+    if (records.length === 0) {
+        allRecordsContainer.innerHTML = '<p class="text-gray-600">No data yet.</p>';
+        return;
+    }
+
+    let listHTML = '';
+    records.forEach(record => {
+        const both = record.both || 0;
+        const total = record.morning + record.afternoon - both;
+        listHTML += `
+            <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
+                <div>
+                    <span class="font-medium">${new Date(record.date + 'T00:00:00').toLocaleDateString()}</span>
+                    <div class="text-sm text-gray-600">
+                        <span class="mr-4">M: ${record.morning}</span>
+                        <span class="mr-4">A: ${record.afternoon}</span>
+                        <span class="mr-4">B: ${both}</span>
+                        <span class="font-semibold">T: ${total}</span>
+                    </div>
+                </div>
+                <button class="edit-btn text-sm text-blue-600 hover:text-blue-800 font-medium" data-id="${record.id}">Edit</button>
+            </div>
+        `;
+    });
+    allRecordsContainer.innerHTML = listHTML;
+}
 
 // --- Modal and Edit Functions ---
 
-function handleReportClick(e) {
+function handleEditClick(e) {
     if (e.target.classList.contains('edit-btn')) {
         const recordId = e.target.dataset.id;
         openEditModal(recordId);
@@ -342,6 +411,7 @@ async function openEditModal(recordId) {
             const data = docSnap.data();
             editMorningInput.value = data.morning;
             editAfternoonInput.value = data.afternoon;
+            editBothInput.value = data.both || 0;
             editDateInput.value = data.date;
             editModal.classList.add('active');
         } else {
@@ -361,18 +431,29 @@ function closeEditModal() {
 }
 
 async function saveChanges() {
-    const morning = parseInt(editMorningInput.value, 10);
-    const afternoon = parseInt(editAfternoonInput.value, 10);
+    const morning = parseInt(editMorningInput.value, 10) || 0;
+    const afternoon = parseInt(editAfternoonInput.value, 10) || 0;
+    const both = parseInt(editBothInput.value, 10) || 0;
     const date = editDateInput.value;
 
-    if (isNaN(morning) || isNaN(afternoon) || !date || morning < 0 || afternoon < 0) {
-        showToast("Please fill all fields correctly.", "error");
+    if (!date) {
+        showToast("Please select a date.", "error");
+        return;
+    }
+    
+    if (morning < 0 || afternoon < 0 || both < 0) {
+        showToast("Attendance cannot be negative.", "error");
+        return;
+    }
+
+    if (both > morning || both > afternoon) {
+        showToast("Attendees of both services cannot exceed morning or afternoon attendance.", "error");
         return;
     }
 
     const docRef = doc(db, `artifacts/${appId}/users/${userId}/attendance`, currentEditingId);
     try {
-        await updateDoc(docRef, { morning, afternoon, date });
+        await updateDoc(docRef, { morning, afternoon, both, date });
         showToast("Record updated successfully!");
         closeEditModal();
     } catch (error) {

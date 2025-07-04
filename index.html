@@ -18,63 +18,88 @@
             <p class="text-gray-600">Log attendance and view reports.</p>
         </header>
 
-        <!-- Tabs Navigation -->
-        <div class="flex border-b mb-6 justify-center">
-            <div id="tab_daily" class="tab active">Weekly Entry</div>
-            <div id="tab_monthly" class="tab">Monthly Report</div>
-            <div id="tab_yearly" class="tab">Yearly Report</div>
+        <div id="main_view">
+            <!-- Tabs Navigation -->
+            <div class="flex border-b mb-6 justify-center">
+                <div id="tab_daily" class="tab active">Weekly Entry</div>
+                <div id="tab_monthly" class="tab">Monthly Report</div>
+                <div id="tab_yearly" class="tab">Yearly Report</div>
+            </div>
+
+            <main>
+                <!-- Weekly Entry Page -->
+                <div id="page_daily" class="page active">
+                    <div class="card">
+                        <h2 class="text-xl font-semibold mb-4">Enter Attendance</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="morning_attendance" class="block text-sm font-medium text-gray-700">Morning Service Attendance</label>
+                                <input type="number" id="morning_attendance" class="input-field" placeholder="e.g., 150">
+                            </div>
+                            <div>
+                                <label for="afternoon_attendance" class="block text-sm font-medium text-gray-700">Afternoon Service Attendance</label>
+                                <input type="number" id="afternoon_attendance" class="input-field" placeholder="e.g., 120">
+                            </div>
+                            <div>
+                                <label for="both_attendance" class="block text-sm font-medium text-gray-700">Number who attended both services</label>
+                                <input type="number" id="both_attendance" class="input-field" placeholder="e.g., 20" value="0">
+                            </div>
+                             <div>
+                                <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
+                                <input type="date" id="attendance_date" class="input-field">
+                            </div>
+                            <button id="save_attendance" class="btn w-full">Save Attendance</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div id="overall_summary_container">
+                            <!-- Overall summary will be injected here by JS -->
+                        </div>
+                        <div class="flex justify-between items-center mt-6 mb-4">
+                            <h2 class="text-xl font-semibold">Recent Records</h2>
+                            <a href="#" id="view_all_link" class="text-sm text-blue-600 hover:underline">View all records →</a>
+                        </div>
+                        <div id="report_container" class="space-y-2">
+                            <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Report Page -->
+                <div id="page_monthly" class="page">
+                    <div class="card">
+                        <h2 class="text-xl font-semibold mb-4">Monthly Attendance Report</h2>
+                        <div id="monthly_report_container" class="space-y-4">
+                             <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yearly Report Page -->
+                <div id="page_yearly" class="page">
+                    <div class="card">
+                        <h2 class="text-xl font-semibold mb-4">Yearly Attendance Summary</h2>
+                        <div id="yearly_report_container" class="space-y-4">
+                             <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
 
-        <main>
-            <!-- Weekly Entry Page -->
-            <div id="page_daily" class="page active">
-                <div class="card">
-                    <h2 class="text-xl font-semibold mb-4">Enter Sunday Attendance</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="morning_attendance" class="block text-sm font-medium text-gray-700">Morning Service Attendance</label>
-                            <input type="number" id="morning_attendance" class="input-field" placeholder="e.g., 150">
-                        </div>
-                        <div>
-                            <label for="afternoon_attendance" class="block text-sm font-medium text-gray-700">Afternoon Service Attendance</label>
-                            <input type="number" id="afternoon_attendance" class="input-field" placeholder="e.g., 120">
-                        </div>
-                         <div>
-                            <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
-                            <input type="date" id="attendance_date" class="input-field">
-                        </div>
-                        <button id="save_attendance" class="btn w-full">Save Attendance</button>
-                    </div>
+        <!-- All Records Page -->
+        <div id="page_all" class="page">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">All Attendance Records</h2>
+                    <a href="#" id="back_link" class="text-sm text-blue-600 hover:underline">← Back to Main</a>
                 </div>
-
-                <div class="card">
-                    <h2 class="text-xl font-semibold mb-4">Overall Summary</h2>
-                    <div id="report_container" class="space-y-4">
-                        <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
-                    </div>
+                <div id="all_records_container" class="space-y-2">
+                     <p class="text-gray-600">No data yet. Add some attendance records to see them here.</p>
                 </div>
             </div>
-
-            <!-- Monthly Report Page -->
-            <div id="page_monthly" class="page">
-                <div class="card">
-                    <h2 class="text-xl font-semibold mb-4">Monthly Attendance Report</h2>
-                    <div id="monthly_report_container" class="space-y-4">
-                         <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Yearly Report Page -->
-            <div id="page_yearly" class="page">
-                <div class="card">
-                    <h2 class="text-xl font-semibold mb-4">Yearly Attendance Summary</h2>
-                    <div id="yearly_report_container" class="space-y-4">
-                         <p class="text-gray-600">No data yet. Add some attendance records to generate a report.</p>
-                    </div>
-                </div>
-            </div>
-        </main>
+        </div>
         
         <div id="toast-container"></div>
     </div>
@@ -93,16 +118,18 @@
                     <input type="number" id="edit_afternoon_attendance" class="input-field">
                 </div>
                 <div>
+                    <label for="edit_both_attendance" class="block text-sm font-medium text-gray-700">Number who attended both</label>
+                    <input type="number" id="edit_both_attendance" class="input-field">
+                </div>
+                <div>
                     <label for="edit_attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
                     <input type="date" id="edit_attendance_date" class="input-field">
                 </div>
             </div>
-            <div class="mt-6 flex justify-between items-center">
-                <button id="delete_record_btn" class="btn btn-danger">Delete</button>
-                <div class="space-x-2">
-                    <button id="cancel_edit_btn" class="btn btn-secondary">Cancel</button>
-                    <button id="save_changes_btn" class="btn">Save Changes</button>
-                </div>
+            <div class="mt-6 flex flex-col sm:flex-row-reverse gap-2">
+                <button id="save_changes_btn" class="btn w-full sm:w-auto">Save Changes</button>
+                <button id="cancel_edit_btn" class="btn btn-secondary w-full sm:w-auto">Cancel</button>
+                <button id="delete_record_btn" class="btn btn-danger w-full sm:w-auto mt-2 sm:mt-0 sm:mr-auto">Delete</button>
             </div>
         </div>
     </div>
