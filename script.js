@@ -1,10 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, onSnapshot, collection, addDoc, serverTimestamp, query, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
     apiKey: "AIzaSyC33cP0PgxrlMBVm1xfnF_wpYTkfl3_iCQ",
     authDomain: "gift-attendance-tracker.firebaseapp.com",
     projectId: "gift-attendance-tracker",
@@ -12,8 +12,7 @@ import { getFirestore, doc, getDoc, onSnapshot, collection, addDoc, serverTimest
     messagingSenderId: "40292587335",
     appId: "1:40292587335:web:6788dab5131b3c58b91e62",
     measurementId: "G-WNQVJ14B0F"
-  };
-
+};
 const appId = firebaseConfig.appId;
 
 // --- Initialize Firebase ---
@@ -21,26 +20,17 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let userId = null;
-let isAuthReady = false;
 let currentEditingId = null;
 
-// --- Authentication ---
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        userId = user.uid;
-    } else {
-        try {
-            await signInAnonymously(auth);
-        } catch (error) {
-            console.error("Authentication Error:", error);
-        }
-    }
-    isAuthReady = true;
-    loadAttendanceReport();
-});
-
 // --- DOM Elements ---
+const loginView = document.getElementById('login_view');
+const appView = document.getElementById('app_view');
+const loginForm = document.getElementById('login_form');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const loginError = document.getElementById('login_error');
+const logoutBtn = document.getElementById('logout_btn');
+
 const morningAttendanceInput = document.getElementById('morning_attendance');
 const afternoonAttendanceInput = document.getElementById('afternoon_attendance');
 const bothAttendanceInput = document.getElementById('both_attendance');
@@ -53,23 +43,19 @@ const allRecordsContainer = document.getElementById('all_records_container');
 const overallSummaryContainer = document.getElementById('overall_summary_container');
 const toastContainer = document.getElementById('toast-container');
 
-// Views and Pages
 const mainView = document.getElementById('main_view');
 const pageDaily = document.getElementById('page_daily');
 const pageMonthly = document.getElementById('page_monthly');
 const pageYearly = document.getElementById('page_yearly');
 const pageAll = document.getElementById('page_all');
 
-// Tabs
 const tabDaily = document.getElementById('tab_daily');
 const tabMonthly = document.getElementById('tab_monthly');
 const tabYearly = document.getElementById('tab_yearly');
 
-// Links for navigation
 const viewAllLink = document.getElementById('view_all_link');
 const backLink = document.getElementById('back_link');
 
-// --- Modal DOM Elements ---
 const editModal = document.getElementById('edit_modal');
 const editMorningInput = document.getElementById('edit_morning_attendance');
 const editAfternoonInput = document.getElementById('edit_afternoon_attendance');
@@ -79,10 +65,44 @@ const saveChangesBtn = document.getElementById('save_changes_btn');
 const cancelEditBtn = document.getElementById('cancel_edit_btn');
 const deleteRecordBtn = document.getElementById('delete_record_btn');
 
-// --- Set default date to today ---
-attendanceDateInput.valueAsDate = new Date();
+// --- Authentication ---
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        // User is signed in
+        loginView.style.display = 'none';
+        appView.style.display = 'block';
+        loadAttendanceReport();
+    } else {
+        // User is signed out
+        loginView.style.display = 'flex';
+        appView.style.display = 'none';
+    }
+});
 
 // --- Event Listeners ---
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    loginError.textContent = '';
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        console.error("Login Error:", error);
+        loginError.textContent = 'Invalid email or password.';
+    }
+});
+
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await signOut(auth);
+    } catch (error) {
+        console.error("Logout Error:", error);
+    }
+});
+
+attendanceDateInput.valueAsDate = new Date();
+
 saveAttendanceButton.addEventListener('click', saveAttendance);
 tabDaily.addEventListener('click', () => switchTab('daily'));
 tabMonthly.addEventListener('click', () => switchTab('monthly'));
@@ -100,7 +120,6 @@ backLink.addEventListener('click', (e) => {
     mainView.style.display = 'block';
 });
 
-// Add event listeners to parent containers for edit buttons
 reportContainer.addEventListener('click', handleEditClick);
 allRecordsContainer.addEventListener('click', handleEditClick);
 
@@ -118,11 +137,6 @@ function switchTab(tabName) {
 }
 
 async function saveAttendance() {
-    if (!isAuthReady || !userId) {
-        showToast("Authentication not ready. Please wait.", "error");
-        return;
-    }
-
     const morningCount = parseInt(morningAttendanceInput.value, 10) || 0;
     const afternoonCount = parseInt(afternoonAttendanceInput.value, 10) || 0;
     const bothCount = parseInt(bothAttendanceInput.value, 10) || 0;
@@ -144,7 +158,7 @@ async function saveAttendance() {
     }
 
     try {
-        const attendanceCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/attendance`);
+        const attendanceCollectionRef = collection(db, `artifacts/${appId}/attendance`);
         await addDoc(attendanceCollectionRef, {
             morning: morningCount,
             afternoon: afternoonCount,
@@ -164,9 +178,7 @@ async function saveAttendance() {
 }
 
 async function loadAttendanceReport() {
-    if (!isAuthReady || !userId) return;
-
-    const attendanceCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/attendance`);
+    const attendanceCollectionRef = collection(db, `artifacts/${appId}/attendance`);
     const q = query(attendanceCollectionRef);
 
     onSnapshot(q, (querySnapshot) => {
@@ -402,13 +414,12 @@ function handleEditClick(e) {
 }
 
 async function openEditModal(recordId) {
-    if (!isAuthReady || !userId) return;
-    currentEditingId = recordId;
-    const docRef = doc(db, `artifacts/${appId}/users/${userId}/attendance`, recordId);
+    const docRef = doc(db, `artifacts/${appId}/attendance`, recordId);
     try {
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             const data = docSnap.data();
+            currentEditingId = recordId;
             editMorningInput.value = data.morning;
             editAfternoonInput.value = data.afternoon;
             editBothInput.value = data.both || 0;
@@ -451,7 +462,7 @@ async function saveChanges() {
         return;
     }
 
-    const docRef = doc(db, `artifacts/${appId}/users/${userId}/attendance`, currentEditingId);
+    const docRef = doc(db, `artifacts/${appId}/attendance`, currentEditingId);
     try {
         await updateDoc(docRef, { morning, afternoon, both, date });
         showToast("Record updated successfully!");
@@ -472,7 +483,7 @@ function handleDeleteClick() {
 }
 
 async function deleteRecord() {
-    const docRef = doc(db, `artifacts/${appId}/users/${userId}/attendance`, currentEditingId);
+    const docRef = doc(db, `artifacts/${appId}/attendance`, currentEditingId);
     try {
         await deleteDoc(docRef);
         showToast("Record deleted successfully!");
