@@ -167,9 +167,16 @@ async function saveAttendance() {
         const bothTotal = parseInt(bothTotalInput.value, 10) || 0;
 
         if (bothTotal < 0) throw new Error("Attendance cannot be negative.");
-        
+
         const morningTotal = Object.values(morning).reduce((a, b) => a + b, 0);
         const afternoonTotal = Object.values(afternoon).reduce((a, b) => a + b, 0);
+
+        // ✅ Stop saving if all fields = 0
+        if (morningTotal === 0 && afternoonTotal === 0 && bothTotal === 0) {
+            showToast("Cannot save. All attendance values are zero.", "error");
+            return;
+        }
+
         if (bothTotal > morningTotal || bothTotal > afternoonTotal) {
             throw new Error("'Both' count cannot exceed total morning or afternoon attendance.");
         }
@@ -179,7 +186,7 @@ async function saveAttendance() {
             date: attendanceDate,
             morning,
             afternoon,
-            both: bothTotal, // Save as a single number
+            both: bothTotal,
             createdAt: serverTimestamp()
         });
 
