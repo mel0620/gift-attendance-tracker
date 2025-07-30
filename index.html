@@ -53,15 +53,17 @@
 
     <!-- Main App View (hidden by default) -->
     <div id="app_view" style="display: none;">
-        <div class="container mx-auto p-4 max-w-2xl">
-            <header class="sticky top-0 inset-x-0 text-center my-8 bg-white p-4 rounded-lg shadow-md">
+        <header class="sticky top-0 inset-x-0 text-center bg-white p-4 shadow-md">
+            <div class="container mx-auto">
                 <div class="flex justify-between items-center">
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 w-1/3 whitespace-nowrap">Attendance Tracker</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 whitespace-nowrap">Attendance Tracker</h1>
                     <div class="text-right">
                         <button id="logout_btn" class="text-sm text-blue-600 hover:underline">Logout</button>
                     </div>
                 </div>
-            </header>
+            </div>
+        </header>
+        <div class="container mx-auto p-4 max-w-2xl">
 
             <div id="main_view">
                 <!-- Tabs Navigation -->

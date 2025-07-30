@@ -249,6 +249,11 @@ function generateRecordListItem(record) {
     const afternoonTotal = Object.values(record.afternoon).reduce((a, b) => a + b, 0);
     const uniqueTotal = getUniqueTotal(record);
 
+    // 🔥 Calculate total visitors
+    const morningVisitors = record.morning.visitors || 0;
+    const afternoonVisitors = record.afternoon.visitors || 0;
+    const visitorTotal = morningVisitors + afternoonVisitors;
+
     return `
         <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
             <div>
@@ -256,6 +261,7 @@ function generateRecordListItem(record) {
                 <div class="text-sm text-gray-600">
                     <span class="mr-4">M: ${morningTotal}</span>
                     <span class="mr-4">A: ${afternoonTotal}</span>
+                    <span class="mr-4">V: ${visitorTotal}</span>
                     <span class="font-semibold">Total: ${uniqueTotal}</span>
                 </div>
             </div>
@@ -290,11 +296,23 @@ function generateAggregateReport(container, records, groupBy) {
         dataMap[key].count++;
     });
 
-    const sortedKeys = Object.keys(dataMap).sort((a,b) => b.localeCompare(a));
+    // 🔥 Sort by latest month (convert to date for correct ordering)
+    const sortedKeys = Object.keys(dataMap).sort((a, b) => {
+        // If it's a year (4 digits), sort numerically
+        if (/^\d{4}$/.test(a) && /^\d{4}$/.test(b)) {
+            return parseInt(b) - parseInt(a); // descending
+        }
+        // Otherwise, fallback to date parsing (for months)
+        const dateA = new Date(a);
+        const dateB = new Date(b);
+        return dateB - dateA;
+    });
+
+
     container.innerHTML = sortedKeys.map(key => {
         const data = dataMap[key];
         const getAverages = (categoryData) => Object.fromEntries(Object.entries(categoryData).map(([k, v]) => [k, Math.round(v / data.count)]));
-        
+
         const avgMorning = getAverages(data.morning);
         const avgAfternoon = getAverages(data.afternoon);
         const avgUniqueTotal = Math.round(data.uniqueTotal / data.count);
