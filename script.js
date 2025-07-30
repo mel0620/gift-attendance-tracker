@@ -234,20 +234,56 @@ function generateOverallSummary(records) {
         overallSummaryContainer.innerHTML = '';
         return;
     }
+
+    // 🔥 Filter records to current month only
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const monthRecords = records.filter(rec => {
+        const date = new Date(rec.date + 'T00:00:00');
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+
+    if (monthRecords.length === 0) {
+        overallSummaryContainer.innerHTML = `
+            <p class="text-gray-600 text-center">No records yet for this month.</p>`;
+        return;
+    }
+
+    // Calculate totals
     const totals = { morning: 0, afternoon: 0, unique: 0 };
-    records.forEach(rec => {
+    monthRecords.forEach(rec => {
         totals.morning += Object.values(rec.morning).reduce((a, b) => a + b, 0);
         totals.afternoon += Object.values(rec.afternoon).reduce((a, b) => a + b, 0);
         totals.unique += getUniqueTotal(rec);
     });
 
+    // Averages
+    const count = monthRecords.length;
+    const avgMorning = Math.round(totals.morning / count);
+    const avgAfternoon = Math.round(totals.afternoon / count);
+    const avgUnique = Math.round(totals.unique / count);
+
+    // ✅ Display Monthly Avg
+    const monthName = now.toLocaleString('default', { month: 'long' });
     overallSummaryContainer.innerHTML = `
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-            <div class="bg-blue-100 p-3 rounded-lg"><p class="text-sm text-blue-800">Avg. Morning</p><p class="text-2xl font-bold text-blue-900">${Math.round(totals.morning / records.length)}</p></div>
-            <div class="bg-green-100 p-3 rounded-lg"><p class="text-sm text-green-800">Avg. Afternoon</p><p class="text-2xl font-bold text-green-900">${Math.round(totals.afternoon / records.length)}</p></div>
-            <div class="bg-purple-100 p-3 rounded-lg"><p class="text-sm text-purple-800">Avg. Unique Total</p><p class="text-2xl font-bold text-purple-900">${Math.round(totals.unique / records.length)}</p></div>
+            <div class="bg-blue-100 p-3 rounded-lg">
+                <p class="text-sm text-blue-800">Avg. Morning (${monthName})</p>
+                <p class="text-2xl font-bold text-blue-900">${avgMorning}</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-lg">
+                <p class="text-sm text-green-800">Avg. Afternoon (${monthName})</p>
+                <p class="text-2xl font-bold text-green-900">${avgAfternoon}</p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-lg">
+                <p class="text-sm text-purple-800">Avg. Unique Total (${monthName})</p>
+                <p class="text-2xl font-bold text-purple-900">${avgUnique}</p>
+            </div>
         </div>`;
 }
+
 
 function generateRecordListItem(record) {
     const morningTotal = Object.values(record.morning).reduce((a, b) => a + b, 0);
@@ -291,32 +327,38 @@ function generateAggregateReport(container, records, groupBy) {
     records.forEach(record => {
         const key = groupBy(record.date);
         if (!dataMap[key]) {
-            dataMap[key] = { morning: {}, afternoon: {}, uniqueTotal: 0, count: 0 };
+            dataMap[key] = { 
+                morning: {}, 
+                afternoon: {}, 
+                totalVisitors: 0, 
+                uniqueTotal: 0, 
+                count: 0 
+            };
         }
+
         ['adults', 'youth', 'kids', 'visitors'].forEach(cat => {
             dataMap[key].morning[cat] = (dataMap[key].morning[cat] || 0) + (record.morning[cat] || 0);
             dataMap[key].afternoon[cat] = (dataMap[key].afternoon[cat] || 0) + (record.afternoon[cat] || 0);
         });
+
+        // 🔥 Sum total visitors (no average)
+        dataMap[key].totalVisitors += (record.morning.visitors || 0) + (record.afternoon.visitors || 0);
+
         dataMap[key].uniqueTotal += getUniqueTotal(record);
         dataMap[key].count++;
     });
 
-    // 🔥 Sort by latest month (convert to date for correct ordering)
+    // ✅ Sort latest first
     const sortedKeys = Object.keys(dataMap).sort((a, b) => {
-        // If it's a year (4 digits), sort numerically
-        if (/^\d{4}$/.test(a) && /^\d{4}$/.test(b)) {
-            return parseInt(b) - parseInt(a); // descending
-        }
-        // Otherwise, fallback to date parsing (for months)
         const dateA = new Date(a);
         const dateB = new Date(b);
         return dateB - dateA;
     });
 
-
     container.innerHTML = sortedKeys.map(key => {
         const data = dataMap[key];
-        const getAverages = (categoryData) => Object.fromEntries(Object.entries(categoryData).map(([k, v]) => [k, Math.round(v / data.count)]));
+        const getAverages = (categoryData) => 
+            Object.fromEntries(Object.entries(categoryData).map(([k, v]) => [k, Math.round(v / data.count)]));
 
         const avgMorning = getAverages(data.morning);
         const avgAfternoon = getAverages(data.afternoon);
@@ -334,9 +376,12 @@ function generateAggregateReport(container, records, groupBy) {
                         <h5 class="font-semibold mb-1 text-green-900">Avg. Afternoon</h5>
                         <p class="text-green-800">A:${avgAfternoon.adults}, Y:${avgAfternoon.youth}, K:${avgAfternoon.kids}, V:${avgAfternoon.visitors}</p>
                     </div>
-                </div>
-                <div class="mt-4 bg-purple-100 p-3 rounded-lg">
-                    <div class="font-semibold text-purple-900">Avg. Unique Total: ${avgUniqueTotal}</div>
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <div class="font-semibold text-purple-900">Avg. Unique Total: ${avgUniqueTotal}</div>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-lg">
+                        <div class="font-semibold text-yellow-900">Total Visitors: ${data.totalVisitors}</div>
+                    </div>
                 </div>
                 <div class="text-xs text-gray-500 mt-2 text-right">${data.count} record(s)</div>
             </div>`;
