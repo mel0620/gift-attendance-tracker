@@ -123,7 +123,12 @@ saveAttendanceButton.addEventListener('click', saveAttendance);
 tabDaily.addEventListener('click', () => switchTab('daily'));
 tabMonthly.addEventListener('click', () => switchTab('monthly'));
 tabYearly.addEventListener('click', () => switchTab('yearly'));
-viewAllLink.addEventListener('click', (e) => { e.preventDefault(); mainView.style.display = 'none'; pageAll.style.display = 'block'; });
+viewAllLink.addEventListener('click', (e) => { 
+    e.preventDefault(); 
+    mainView.style.display = 'none'; 
+    pageAll.style.display = 'block'; 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // 🔥 Scroll to top
+});
 backLink.addEventListener('click', (e) => { e.preventDefault(); pageAll.style.display = 'none'; mainView.style.display = 'block'; });
 reportContainer.addEventListener('click', handleEditClick);
 allRecordsContainer.addEventListener('click', handleEditClick);
