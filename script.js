@@ -47,6 +47,8 @@ const afternoonInputs = {
     visitors: document.getElementById('afternoon_visitors'),
 };
 const bothTotalInput = document.getElementById('both_total');
+const baptizedTotalInput = document.getElementById('baptized_total');
+
 
 // Report Containers
 const reportContainer = document.getElementById('report_container');
@@ -87,6 +89,7 @@ const editAfternoonInputs = {
     visitors: document.getElementById('edit_afternoon_visitors'),
 };
 const editBothTotalInput = document.getElementById('edit_both_total');
+const editBaptizedTotalInput = document.getElementById('edit_baptized_total');
 const editDateInput = document.getElementById('edit_attendance_date');
 const saveChangesBtn = document.getElementById('save_changes_btn');
 const cancelEditBtn = document.getElementById('cancel_edit_btn');
@@ -165,6 +168,7 @@ async function saveAttendance() {
         const morning = getCountsFromInputs(morningInputs);
         const afternoon = getCountsFromInputs(afternoonInputs);
         const bothTotal = parseInt(bothTotalInput.value, 10) || 0;
+        const baptizedTotal = parseInt(baptizedTotalInput.value, 10) || 0;
 
         if (bothTotal < 0) throw new Error("Attendance cannot be negative.");
 
@@ -187,12 +191,14 @@ async function saveAttendance() {
             morning,
             afternoon,
             both: bothTotal,
+            baptized: baptizedTotal,
             createdAt: serverTimestamp()
         });
 
         showToast("Attendance saved successfully!");
         [...Object.values(morningInputs), ...Object.values(afternoonInputs)].forEach(input => input.value = '0');
         bothTotalInput.value = '0';
+        baptizedTotalInput.value = '0';
     } catch (error) {
         showToast(error.message, "error");
     }
@@ -273,7 +279,7 @@ function generateOverallSummary(records) {
     const avgUnique = Math.round(totals.unique / count);
 
     // ✅ Display Monthly Avg
-    const monthName = now.toLocaleString('default', { month: 'long' });
+    const monthName = now.toLocaleString('default', { month: 'short' });
     overallSummaryContainer.innerHTML = `
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
             <div class="bg-blue-100 p-3 rounded-lg">
@@ -293,29 +299,54 @@ function generateOverallSummary(records) {
 
 
 function generateRecordListItem(record) {
-    const morningTotal = Object.values(record.morning).reduce((a, b) => a + b, 0);
-    const afternoonTotal = Object.values(record.afternoon).reduce((a, b) => a + b, 0);
-    const uniqueTotal = getUniqueTotal(record);
+    // Morning
+    const mAdults = record.morning.adults || 0;
+    const mYouth = record.morning.youth || 0;
+    const mKids = record.morning.kids || 0;
+    const mVisitors = record.morning.visitors || 0;
+    const morningTotal = mAdults + mYouth + mKids + mVisitors;
 
-    // 🔥 Calculate total visitors
-    const morningVisitors = record.morning.visitors || 0;
-    const afternoonVisitors = record.afternoon.visitors || 0;
-    const visitorTotal = morningVisitors + afternoonVisitors;
+    // Afternoon
+    const aAdults = record.afternoon.adults || 0;
+    const aYouth = record.afternoon.youth || 0;
+    const aKids = record.afternoon.kids || 0;
+    const aVisitors = record.afternoon.visitors || 0;
+    const afternoonTotal = aAdults + aYouth + aKids + aVisitors;
+
+    const uniqueTotal = getUniqueTotal(record);
+    const baptizedTotal = record.baptized || 0;
 
     return `
-        <div class="flex justify-between items-center bg-gray-50 p-3 rounded-md">
-            <div>
+        <div class="bg-gray-50 p-3 rounded-md shadow-sm mb-2">
+            <div class="flex justify-between items-center mb-2">
                 <span class="font-medium">${new Date(record.date + 'T00:00:00').toLocaleDateString()}</span>
-                <div class="text-sm text-gray-600">
-                    <span class="mr-4">M: ${morningTotal}</span>
-                    <span class="mr-4">A: ${afternoonTotal}</span>
-                    <span class="mr-4">V: ${visitorTotal}</span>
-                    <span class="font-semibold">Total: ${uniqueTotal}</span>
+                <button class="edit-btn text-sm text-blue-600 hover:text-blue-800 font-medium" 
+                        data-id="${record.id}">Edit</button>
+            </div>
+            <div class="text-xs text-gray-700 space-y-1">
+                <div class="flex justify-between bg-blue-50 p-2 rounded">
+                    <span class="font-semibold text-blue-800">Morning</span>
+                    <span class="text-blue-700">
+                        A:${mAdults} | Y:${mYouth} | K:${mKids} | V:${mVisitors} 
+                        <span class="ml-2 font-bold text-blue-900">Total: ${morningTotal}</span>
+                    </span>
+                </div>
+                <div class="flex justify-between bg-green-50 p-2 rounded">
+                    <span class="font-semibold text-green-800">Afternoon</span>
+                    <span class="text-green-700">
+                        A:${aAdults} | Y:${aYouth} | K:${aKids} | V:${aVisitors} 
+                        <span class="ml-2 font-bold text-green-900">Total: ${afternoonTotal}</span>
+                    </span>
                 </div>
             </div>
-            <button class="edit-btn text-sm text-blue-600 hover:text-blue-800 font-medium" data-id="${record.id}">Edit</button>
+            <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Visitors: ${mVisitors + aVisitors}</span>
+                <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">Baptized: ${baptizedTotal}</span>
+                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded font-semibold">Unique Total: ${uniqueTotal}</span>
+            </div>
         </div>`;
 }
+
 
 function generateRecentRecords(records) {
     reportContainer.innerHTML = records.length ? records.slice(0, 5).map(generateRecordListItem).join('') : '<p class="text-gray-600">No recent records.</p>';
@@ -338,6 +369,7 @@ function generateAggregateReport(container, records, groupBy) {
                 morning: {}, 
                 afternoon: {}, 
                 totalVisitors: 0, 
+                totalBaptized: 0,   // 🔥 Added
                 uniqueTotal: 0, 
                 count: 0 
             };
@@ -348,8 +380,9 @@ function generateAggregateReport(container, records, groupBy) {
             dataMap[key].afternoon[cat] = (dataMap[key].afternoon[cat] || 0) + (record.afternoon[cat] || 0);
         });
 
-        // 🔥 Sum total visitors (no average)
+        // 🔥 Sum total visitors and baptized
         dataMap[key].totalVisitors += (record.morning.visitors || 0) + (record.afternoon.visitors || 0);
+        dataMap[key].totalBaptized += record.baptized || 0;
 
         dataMap[key].uniqueTotal += getUniqueTotal(record);
         dataMap[key].count++;
@@ -364,34 +397,47 @@ function generateAggregateReport(container, records, groupBy) {
 
     container.innerHTML = sortedKeys.map(key => {
         const data = dataMap[key];
-        const getAverages = (categoryData) => 
-            Object.fromEntries(Object.entries(categoryData).map(([k, v]) => [k, Math.round(v / data.count)]));
+        // ✅ Use the same formula as overall_summary_container
+        const totalMorning = Object.values(data.morning).reduce((a, b) => a + b, 0);
+        const totalAfternoon = Object.values(data.afternoon).reduce((a, b) => a + b, 0);
 
-        const avgMorning = getAverages(data.morning);
-        const avgAfternoon = getAverages(data.afternoon);
+        const avgMorning = Math.round(totalMorning / data.count);
+        const avgAfternoon = Math.round(totalAfternoon / data.count);
         const avgUniqueTotal = Math.round(data.uniqueTotal / data.count);
 
         return `
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h4 class="font-bold text-lg text-gray-800 mb-2">${key}</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div class="bg-blue-100 p-3 rounded-lg">
-                        <h5 class="font-semibold mb-1 text-blue-900">Avg. Morning</h5>
-                        <p class="text-blue-800">A:${avgMorning.adults}, Y:${avgMorning.youth}, K:${avgMorning.kids}, V:${avgMorning.visitors}</p>
+            <div class="bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition mb-3">
+                <h4 class="font-bold text-lg text-gray-800 mb-4">${key}</h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <!-- Morning -->
+                    <div class="bg-blue-100 p-2 rounded text-center font-semibold text-blue-800">
+                        Avg. Morning Total: ${avgMorning}
                     </div>
-                    <div class="bg-green-100 p-3 rounded-lg">
-                        <h5 class="font-semibold mb-1 text-green-900">Avg. Afternoon</h5>
-                        <p class="text-green-800">A:${avgAfternoon.adults}, Y:${avgAfternoon.youth}, K:${avgAfternoon.kids}, V:${avgAfternoon.visitors}</p>
-                    </div>
-                    <div class="bg-purple-100 p-3 rounded-lg">
-                        <div class="font-semibold text-purple-900">Avg. Unique Total: ${avgUniqueTotal}</div>
-                    </div>
-                    <div class="bg-yellow-100 p-3 rounded-lg">
-                        <div class="font-semibold text-yellow-900">Total Visitors: ${data.totalVisitors}</div>
+
+                    <!-- Afternoon -->
+                    <div class="bg-green-100 p-2 rounded text-center font-semibold text-green-800">
+                        Avg. Afternoon Total: ${avgAfternoon}
                     </div>
                 </div>
-                <div class="text-xs text-gray-500 mt-2 text-right">${data.count} record(s)</div>
+
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-purple-100 p-2 rounded text-center font-semibold text-purple-900">
+                        Avg. Unique Total: ${avgUniqueTotal}
+                    </div>
+                    <div class="bg-yellow-100 p-2 rounded text-center font-semibold text-yellow-900">
+                        Total Visitors: ${data.totalVisitors}
+                    </div>
+                    <div class="bg-orange-100 p-2 rounded text-center font-semibold text-orange-900">
+                        Total Baptized: ${data.totalBaptized}
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-500 mt-3 text-right">
+                    ${data.count} record(s)
+                </div>
             </div>`;
+
     }).join('');
 }
 
@@ -404,7 +450,6 @@ function generateYearlyReport(records) {
 }
 
 // --- Modal and Edit Functions ---
-
 function handleEditClick(e) {
     if (e.target.classList.contains('edit-btn')) {
         openEditModal(e.target.dataset.id);
@@ -418,12 +463,15 @@ async function openEditModal(recordId) {
         if (docSnap.exists()) {
             const data = docSnap.data();
             currentEditingId = recordId;
+
             for (const key in editMorningInputs) editMorningInputs[key].value = data.morning[key] || 0;
             for (const key in editAfternoonInputs) editAfternoonInputs[key].value = data.afternoon[key] || 0;
-            
+
             const bothValue = typeof data.both === 'number' ? data.both : 
                               (data.both ? Object.values(data.both).reduce((a,b)=>a+b,0) : 0);
             editBothTotalInput.value = bothValue;
+
+            editBaptizedTotalInput.value = data.baptized || 0;
 
             editDateInput.value = data.date;
             editModal.classList.add('active');
@@ -452,8 +500,9 @@ async function saveChanges() {
         const morning = getCountsFromInputs(editMorningInputs);
         const afternoon = getCountsFromInputs(editAfternoonInputs);
         const bothTotal = parseInt(editBothTotalInput.value, 10) || 0;
+        const baptizedTotal = parseInt(editBaptizedTotalInput.value, 10) || 0;
 
-        if (bothTotal < 0) throw new Error("Attendance cannot be negative.");
+        if (bothTotal < 0 || baptizedTotal < 0) throw new Error("Attendance cannot be negative.");
 
         const morningTotal = Object.values(morning).reduce((a, b) => a + b, 0);
         const afternoonTotal = Object.values(afternoon).reduce((a, b) => a + b, 0);
@@ -462,13 +511,20 @@ async function saveChanges() {
         }
 
         const docRef = doc(db, `artifacts/${appId}/attendance`, currentEditingId);
-        await updateDoc(docRef, { morning, afternoon, both: bothTotal, date });
+        await updateDoc(docRef, { 
+            morning, 
+            afternoon, 
+            both: bothTotal, 
+            baptized: baptizedTotal, // 🔥 Include baptized
+            date 
+        });
         showToast("Record updated successfully!");
         closeEditModal();
     } catch (error) {
         showToast(error.message, "error");
     }
 }
+
 
 function handleDeleteClick() {
     if (deleteRecordBtn.textContent === 'Delete') {

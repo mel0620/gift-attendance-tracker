@@ -82,7 +82,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                     <!-- Morning Service -->
                                     <fieldset class="border-t-2 border-blue-200 pt-4">
-                                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Morning Service</legend>
+                                        <legend class="text-lg font-medium text-gray-900 -mt-8 pr-2 bg-white">Morning Service</legend>
                                         <div class="max-sm:grid max-sm:grid-cols-2 max-sm:gap-4 md:space-y-4 mt-2">
                                             <div><label for="morning_adults" class="label">Adults</label><input type="number" id="morning_adults" class="input-field" value="0"></div>
                                             <div><label for="morning_youth" class="label">Youth</label><input type="number" id="morning_youth" class="input-field" value="0"></div>
@@ -93,7 +93,7 @@
 
                                     <!-- Afternoon Service -->
                                     <fieldset class="border-t-2 border-green-200 pt-4">
-                                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Afternoon Service</legend>
+                                        <legend class="text-lg font-medium text-gray-900 -mt-8 pr-2 bg-white">Afternoon Service</legend>
                                         <div class="max-sm:grid max-sm:grid-cols-2 max-sm:gap-4 md:space-y-4 mt-2">
                                             <div><label for="afternoon_adults" class="label">Adults</label><input type="number" id="afternoon_adults" class="input-field" value="0"></div>
                                             <div><label for="afternoon_youth" class="label">Youth</label><input type="number" id="afternoon_youth" class="input-field" value="0"></div>
@@ -103,12 +103,16 @@
                                     </fieldset>
                                 </div>
                                 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-4">
-                                     <div>
+                                <div class="grid md:grid-cols-2 gap-x-8 gap-y-6">
+                                    <div>
                                         <label for="both_total" class="block text-sm font-medium text-gray-700">Total Who Attended Both Services</label>
                                         <input type="number" id="both_total" class="input-field" value="0">
                                     </div>
-                                     <div>
+                                    <div>
+                                        <label for="baptized_total" class="block text-sm font-medium text-gray-700">Total Baptized in the Week</label>
+                                        <input type="number" id="baptized_total" class="input-field" value="0">
+                                    </div>
+                                    <div class="md:col-span-2">
                                         <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
                                         <input type="date" id="attendance_date" class="input-field">
                                     </div>
@@ -118,8 +122,9 @@
                         </div>
 
                         <div class="card">
+                            <h2 class="text-xl font-semibold mb-4 text-center">Monthly Report Preview</h2>
                             <div id="overall_summary_container"></div>
-                            <div class="flex justify-between items-center mt-6 mb-4">
+                            <div class="flex justify-between items-center mt-8 mb-4">
                                 <h2 class="text-xl font-semibold">Recent Records</h2>
                                 <a href="#" id="view_all_link" class="text-sm text-blue-600 hover:underline">View all records →</a>
                             </div>
@@ -167,7 +172,7 @@
             <div class="modal-body">
                 <div class="space-y-6">
                      <fieldset class="border-t-2 border-blue-200 pt-4">
-                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Morning</legend>
+                        <legend class="text-lg font-medium text-gray-900 -mt-8 pr-2 bg-white">Morning</legend>
                         <div class="grid grid-cols-2 gap-4 mt-2">
                             <div><label for="edit_morning_adults" class="label">Adults</label><input type="number" id="edit_morning_adults" class="input-field"></div>
                             <div><label for="edit_morning_youth" class="label">Youth</label><input type="number" id="edit_morning_youth" class="input-field"></div>
@@ -176,7 +181,7 @@
                         </div>
                     </fieldset>
                      <fieldset class="border-t-2 border-green-200 pt-4">
-                        <legend class="text-lg font-medium text-gray-900 -mt-8 px-2 bg-white">Afternoon</legend>
+                        <legend class="text-lg font-medium text-gray-900 -mt-8 pr-2 bg-white">Afternoon</legend>
                         <div class="grid grid-cols-2 gap-4 mt-2">
                             <div><label for="edit_afternoon_adults" class="label">Adults</label><input type="number" id="edit_afternoon_adults" class="input-field"></div>
                             <div><label for="edit_afternoon_youth" class="label">Youth</label><input type="number" id="edit_afternoon_youth" class="input-field"></div>
@@ -187,6 +192,10 @@
                     <div>
                         <label for="edit_both_total" class="block text-sm font-medium text-gray-700">Total Who Attended Both</label>
                         <input type="number" id="edit_both_total" class="input-field">
+                    </div>
+                    <div>
+                        <label for="edit_baptized_total" class="block text-sm font-medium text-gray-700">Total Baptized in the Week</label>
+                        <input type="number" id="edit_baptized_total" class="input-field">
                     </div>
                     <div>
                         <label for="edit_attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
