@@ -109,15 +109,39 @@
                                         <input type="number" id="both_total" class="input-field" value="0">
                                     </div>
                                     <div>
-                                        <label for="baptized_total" class="block text-sm font-medium text-gray-700">Total Baptized in the Week</label>
-                                        <input type="number" id="baptized_total" class="input-field" value="0">
-                                    </div>
-                                    <div class="md:col-span-2">
                                         <label for="attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
                                         <input type="date" id="attendance_date" class="input-field">
                                     </div>
                                 </div>
-                                <button id="save_attendance" class="btn w-full">Save Attendance</button>
+
+                                <!-- Weekly Ministry Results -->
+                                <fieldset class="border-t-2 border-indigo-200 pt-4">
+                                    <legend class="text-lg font-medium text-gray-900 -mt-8 pr-2 bg-white">Weekly Ministry Results</legend>
+                                    <div class="grid md:grid-cols-3 gap-4 mt-2">
+                                        <div>
+                                            <label for="baptized_total" class="block text-sm font-medium text-gray-700">Total Baptized</label>
+                                            <input type="number" id="baptized_total" class="input-field" value="0">
+                                        </div>
+                                        <div>
+                                            <label for="holy_ghost_filled_total" class="block text-sm font-medium text-gray-700">Total Holy Ghost Filled</label>
+                                            <input type="number" id="holy_ghost_filled_total" class="input-field" value="0">
+                                        </div>
+                                        <div>
+                                            <label for="healed_total" class="block text-sm font-medium text-gray-700">Total Healed</label>
+                                            <input type="number" id="healed_total" class="input-field" value="0">
+                                        </div>
+                                    </div>
+                                </fieldset>
+                                <button id="save_attendance" class="btn w-full">
+                                    <span id="save_btn_text">Save Attendance</span>
+                                    <span id="save_btn_loader" class="hidden">
+                                        <svg class="animate-spin inline-block h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Saving...
+                                    </span>
+                                </button>
                             </div>
                         </div>
 
@@ -194,13 +218,26 @@
                         <input type="number" id="edit_both_total" class="input-field">
                     </div>
                     <div>
-                        <label for="edit_baptized_total" class="block text-sm font-medium text-gray-700">Total Baptized in the Week</label>
-                        <input type="number" id="edit_baptized_total" class="input-field">
-                    </div>
-                    <div>
                         <label for="edit_attendance_date" class="block text-sm font-medium text-gray-700">Date</label>
                         <input type="date" id="edit_attendance_date" class="input-field">
                     </div>
+                    <fieldset class="border-t-2 border-indigo-200 pt-4">
+                        <legend class="text-lg font-medium text-gray-900 -mt-8 pr-2 bg-white">Weekly Ministry Results</legend>
+                        <div class="grid grid-cols-3 gap-4 mt-2">
+                            <div>
+                                <label for="edit_baptized_total" class="label">Total Baptized</label>
+                                <input type="number" id="edit_baptized_total" class="input-field">
+                            </div>
+                            <div>
+                                <label for="edit_holy_ghost_filled_total" class="label">Total Holy Ghost Filled</label>
+                                <input type="number" id="edit_holy_ghost_filled_total" class="input-field">
+                            </div>
+                            <div>
+                                <label for="edit_healed_total" class="label">Total Healed</label>
+                                <input type="number" id="edit_healed_total" class="input-field">
+                            </div>
+                        </div>
+                    </fieldset>
                 </div>
             </div>
             <div class="mt-6 flex flex-col sm:flex-row-reverse gap-2">

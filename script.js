@@ -48,6 +48,8 @@ const afternoonInputs = {
 };
 const bothTotalInput = document.getElementById('both_total');
 const baptizedTotalInput = document.getElementById('baptized_total');
+const holyGhostFilledTotalInput = document.getElementById('holy_ghost_filled_total');
+const healedTotalInput = document.getElementById('healed_total');
 
 
 // Report Containers
@@ -90,6 +92,8 @@ const editAfternoonInputs = {
 };
 const editBothTotalInput = document.getElementById('edit_both_total');
 const editBaptizedTotalInput = document.getElementById('edit_baptized_total');
+const editHolyGhostFilledTotalInput = document.getElementById('edit_holy_ghost_filled_total');
+const editHealedTotalInput = document.getElementById('edit_healed_total');
 const editDateInput = document.getElementById('edit_attendance_date');
 const saveChangesBtn = document.getElementById('save_changes_btn');
 const cancelEditBtn = document.getElementById('cancel_edit_btn');
@@ -164,13 +168,27 @@ async function saveAttendance() {
         showToast("Please select a date.", "error");
         return;
     }
+    
+    // Show loading indicator
+    const saveBtnText = document.getElementById('save_btn_text');
+    const saveBtnLoader = document.getElementById('save_btn_loader');
+    const saveBtn = document.getElementById('save_attendance');
+    
+    saveBtnText.classList.add('hidden');
+    saveBtnLoader.classList.remove('hidden');
+    saveBtn.disabled = true;
+    
     try {
         const morning = getCountsFromInputs(morningInputs);
         const afternoon = getCountsFromInputs(afternoonInputs);
         const bothTotal = parseInt(bothTotalInput.value, 10) || 0;
         const baptizedTotal = parseInt(baptizedTotalInput.value, 10) || 0;
+        const holyGhostFilledTotal = parseInt(holyGhostFilledTotalInput.value, 10) || 0;
+        const healedTotal = parseInt(healedTotalInput.value, 10) || 0;
 
-        if (bothTotal < 0) throw new Error("Attendance cannot be negative.");
+        if (bothTotal < 0 || baptizedTotal < 0 || holyGhostFilledTotal < 0 || healedTotal < 0) {
+            throw new Error("Attendance cannot be negative.");
+        }
 
         const morningTotal = Object.values(morning).reduce((a, b) => a + b, 0);
         const afternoonTotal = Object.values(afternoon).reduce((a, b) => a + b, 0);
@@ -192,6 +210,8 @@ async function saveAttendance() {
             afternoon,
             both: bothTotal,
             baptized: baptizedTotal,
+            holyGhostFilled: holyGhostFilledTotal,
+            healed: healedTotal,
             createdAt: serverTimestamp()
         });
 
@@ -199,8 +219,15 @@ async function saveAttendance() {
         [...Object.values(morningInputs), ...Object.values(afternoonInputs)].forEach(input => input.value = '0');
         bothTotalInput.value = '0';
         baptizedTotalInput.value = '0';
+        holyGhostFilledTotalInput.value = '0';
+        healedTotalInput.value = '0';
     } catch (error) {
         showToast(error.message, "error");
+    } finally {
+        // Hide loading indicator
+        saveBtnText.classList.remove('hidden');
+        saveBtnLoader.classList.add('hidden');
+        saveBtn.disabled = false;
     }
 }
 
@@ -315,6 +342,8 @@ function generateRecordListItem(record) {
 
     const uniqueTotal = getUniqueTotal(record);
     const baptizedTotal = record.baptized || 0;
+    const holyGhostFilledTotal = record.holyGhostFilled || 0;
+    const healedTotal = record.healed || 0;
 
     return `
         <div class="bg-gray-50 p-3 rounded-md shadow-sm mb-2">
@@ -342,6 +371,8 @@ function generateRecordListItem(record) {
             <div class="mt-2 flex flex-wrap gap-2 text-xs">
                 <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Visitors: ${mVisitors + aVisitors}</span>
                 <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">Baptized: ${baptizedTotal}</span>
+                <span class="bg-pink-100 text-pink-800 px-2 py-1 rounded">Holy Ghost Filled: ${holyGhostFilledTotal}</span>
+                <span class="bg-teal-100 text-teal-800 px-2 py-1 rounded">Healed: ${healedTotal}</span>
                 <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded font-semibold">Unique Total: ${uniqueTotal}</span>
             </div>
         </div>`;
@@ -369,7 +400,9 @@ function generateAggregateReport(container, records, groupBy) {
                 morning: {}, 
                 afternoon: {}, 
                 totalVisitors: 0, 
-                totalBaptized: 0,   // 🔥 Added
+                totalBaptized: 0,
+                totalHolyGhostFilled: 0,
+                totalHealed: 0,
                 uniqueTotal: 0, 
                 count: 0 
             };
@@ -380,9 +413,11 @@ function generateAggregateReport(container, records, groupBy) {
             dataMap[key].afternoon[cat] = (dataMap[key].afternoon[cat] || 0) + (record.afternoon[cat] || 0);
         });
 
-        // 🔥 Sum total visitors and baptized
+        // Sum total visitors, baptized, holy ghost filled, and healed
         dataMap[key].totalVisitors += (record.morning.visitors || 0) + (record.afternoon.visitors || 0);
         dataMap[key].totalBaptized += record.baptized || 0;
+        dataMap[key].totalHolyGhostFilled += record.holyGhostFilled || 0;
+        dataMap[key].totalHealed += record.healed || 0;
 
         dataMap[key].uniqueTotal += getUniqueTotal(record);
         dataMap[key].count++;
@@ -421,7 +456,7 @@ function generateAggregateReport(container, records, groupBy) {
                     </div>
                 </div>
 
-                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-5 gap-4 text-xs">
                     <div class="bg-purple-100 p-2 rounded text-center font-semibold text-purple-900">
                         Avg. Unique Total: ${avgUniqueTotal}
                     </div>
@@ -430,6 +465,12 @@ function generateAggregateReport(container, records, groupBy) {
                     </div>
                     <div class="bg-orange-100 p-2 rounded text-center font-semibold text-orange-900">
                         Total Baptized: ${data.totalBaptized}
+                    </div>
+                    <div class="bg-pink-100 p-2 rounded text-center font-semibold text-pink-900">
+                        Total Holy Ghost Filled: ${data.totalHolyGhostFilled}
+                    </div>
+                    <div class="bg-teal-100 p-2 rounded text-center font-semibold text-teal-900">
+                        Total Healed: ${data.totalHealed}
                     </div>
                 </div>
 
@@ -472,6 +513,8 @@ async function openEditModal(recordId) {
             editBothTotalInput.value = bothValue;
 
             editBaptizedTotalInput.value = data.baptized || 0;
+            editHolyGhostFilledTotalInput.value = data.holyGhostFilled || 0;
+            editHealedTotalInput.value = data.healed || 0;
 
             editDateInput.value = data.date;
             editModal.classList.add('active');
@@ -501,8 +544,12 @@ async function saveChanges() {
         const afternoon = getCountsFromInputs(editAfternoonInputs);
         const bothTotal = parseInt(editBothTotalInput.value, 10) || 0;
         const baptizedTotal = parseInt(editBaptizedTotalInput.value, 10) || 0;
+        const holyGhostFilledTotal = parseInt(editHolyGhostFilledTotalInput.value, 10) || 0;
+        const healedTotal = parseInt(editHealedTotalInput.value, 10) || 0;
 
-        if (bothTotal < 0 || baptizedTotal < 0) throw new Error("Attendance cannot be negative.");
+        if (bothTotal < 0 || baptizedTotal < 0 || holyGhostFilledTotal < 0 || healedTotal < 0) {
+            throw new Error("Attendance cannot be negative.");
+        }
 
         const morningTotal = Object.values(morning).reduce((a, b) => a + b, 0);
         const afternoonTotal = Object.values(afternoon).reduce((a, b) => a + b, 0);
@@ -515,7 +562,9 @@ async function saveChanges() {
             morning, 
             afternoon, 
             both: bothTotal, 
-            baptized: baptizedTotal, // 🔥 Include baptized
+            baptized: baptizedTotal,
+            holyGhostFilled: holyGhostFilledTotal,
+            healed: healedTotal,
             date 
         });
         showToast("Record updated successfully!");
